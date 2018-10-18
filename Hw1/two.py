@@ -5,15 +5,18 @@ import numpy as np
 import sys
 import random
 
-
+# Running counter attack a (without extra information)
 def attack_a(a, n):
-    x_hat = [1] * n
+    # Set default guesses to 1
+    # Each bit is correct with probability 1/2
+    x_hat = [1] * n 
 
+    # Based on value of noisy running counter, set other bits we are certain about
+    # These are correct with probability 1
     if a[0] == 0:
         x_hat[0] = 0
     elif a[0] == 2:
         x_hat[0] = 1
-
     for i in range(2, n):
         a_diff = a[i]-a[i-1] 
         if a_diff == 2:
@@ -23,88 +26,78 @@ def attack_a(a, n):
     return x_hat
 
 
+# Running counter attack b (with extra information, w)
 def attack_b(a, w, n):
-    x_hat = [1] * n
+    # Set default guesses to w
+    # Each bit is correct with probability 2/3
+    x_hat = [w[i] for i in range(n)] 
 
+    # Based on value of noisy running counter, set other bits we are certain about
+    # These are correct with probability 1
     if a[0] == 0:
         x_hat[0] = 0
     elif a[0] == 2:
         x_hat[0] = 1
-    else:
-        x_hat[0] = w[0]
-
     for i in range(2, n):
         a_diff = a[i]-a[i-1] 
         if a_diff == 2:
             x_hat[i] = 1
         elif a_diff == -1:
             x_hat[i] = 0
-        else:
-            x_hat[i] = w[i]
     return x_hat
 
 
+# Generate noisy running counter
 def generate_data(n):
-    x = np.random.randint(2, size = n)
-    exact_answers = np.cumsum(x) # This computes the array of prefix sums of x.
-    z = np.random.randint(2, size = n)
-    a = exact_answers + z
+    x = np.random.randint(2, size = n) # Sample x uniformly at random
+    exact_answers = np.cumsum(x) # Compute running counter of x
+    z = np.random.randint(2, size = n) # Generate noise for each bit
+    a = exact_answers + z # Create noisy running counter
     return (x.tolist(), exact_answers.tolist(), a.tolist())
 
-
+# Generate extra information, w
 def generate_w(x, n):
     w = [1] * n
     for i in range(n):
-        rand = random.randint(0, 2)
+        rand = random.randint(0, 2) # Sample random integer in [0,2]
         if rand < 2:
-            w[i] = x[i]
+            w[i] = x[i] # w[i] is correct with probability 2/3
         else:
-            w[i] = (x[i] + 1) % 2
+            w[i] = (x[i] + 1) % 2 # w[i] is incorrect with probability 1/3
     return w
-
-def test():
-    n = int(sys.argv[1])
-    x, _, a = generate_data(n)
-    w = generate_w(x, n)
 
 
 def main():
+    # Set number of trials.
     trials = 50
-    mean_a = np.array([])
-    mean_b = np.array([])
-    std_a = np.array([])
-    std_b = np.array([])
 
+    # Initialize arrays for storing statistics.
+    mean_a, mean_b, std_a, std_b = np.array([]), np.array([]), np.array([]), np.array([])
+
+    # Loop through values of n.
     n_vals = [100, 500, 1000, 5000]
-
     for n in n_vals:
-        results_a = np.array([])
-        results_b = np.array([])
+        # Initialize arrays for storing results.
+        results_a, results_b = np.array([]), np.array([])
 
+        # Run trials.
         for i in range(trials):
-            x, _, a = generate_data(n)
-            w = generate_w(x, n)
+            x, _, a = generate_data(n) # Get x and noisy running counter.
+            w = generate_w(x, n) # Get extra information.
 
-            x_hat_a = attack_a(a, n)
-            x_hat_b = attack_b(a, w, n)
+            x_hat_a = attack_a(a, n) # Run attack a to get guesses.
+            x_hat_b = attack_b(a, w, n) # Run attack b to get guesses.
 
-            results_a = np.append(results_a, frac_correct(x, x_hat_a, n))
-            results_b = np.append(results_b, frac_correct(x, x_hat_b, n))
+            results_a = np.append(results_a, frac_correct(x, x_hat_a, n)) # Store fraction recovered for attack a.
+            results_b = np.append(results_b, frac_correct(x, x_hat_b, n)) # Store fraction recovered by attack b.
 
+        # Compute mean and standard deviation for both attacks.
         mean_a = np.append(mean_a, np.mean(results_a))
         mean_b = np.append(mean_b, np.mean(results_b))
         std_a = np.append(std_a, np.std(results_a))
         std_b = np.append(std_b, np.std(results_b))
 
-        print "for n = " + str(n)
-        print "results_a: " + str(results_a)
-        print "mean a: " + str(np.mean(results_a))
-        print "stddev a: " + str(np.std(results_a))
-
-        print "results_b: " + str(results_b)
-        print "mean b: " + str(np.mean(results_b))
-        print "stddev b: " + str(np.std(results_b))
-
+    # Plot results.
     plt.plot(n_vals, mean_a, 'bo-', label='Mean fraction recovered without extra info')
     plt.plot(n_vals, mean_b, 'go-', label='Mean fraction recovered with extra info')
     plt.plot(n_vals, std_a, 'b^:', label='Standard deviation of fraction recovered without extra info')
@@ -115,7 +108,5 @@ def main():
     plt.legend(loc='best')
     plt.show()
 
-
 if __name__ == "__main__":
     main()
-    #test()
