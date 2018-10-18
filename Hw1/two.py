@@ -105,14 +105,14 @@ def main():
         print "mean b: " + str(np.mean(results_b))
         print "stddev b: " + str(np.std(results_b))
 
-    plt.plot(n_vals, mean_a, 'bo-', label='Mean a')
-    plt.plot(n_vals, mean_b, 'go-', label='Mean b')
-
-    plt.xlabel('n')
-    plt.ylabel('Fraction of bits recovered')
-
-    plt.title("Simple Plot")
-    plt.legend()
+    plt.plot(n_vals, mean_a, 'bo-', label='Mean fraction recovered without extra info')
+    plt.plot(n_vals, mean_b, 'go-', label='Mean fraction recovered with extra info')
+    plt.plot(n_vals, std_a, 'b^:', label='Standard deviation of fraction recovered without extra info')
+    plt.plot(n_vals, std_b, 'g^:', label='Standard deviation of fraction recovered with extra info')
+    plt.xlabel('Length of x (n)')
+    plt.ylabel('Fraction of bits of x recovered')
+    plt.title("How well can we recover x from a noisy running counter?")
+    plt.legend(loc='best')
     plt.show()
 
 
