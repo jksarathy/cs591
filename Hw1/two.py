@@ -7,22 +7,27 @@ import random
 
 # Running counter attack a (without extra information)
 def attack_a(a, n):
-    # Set default guesses to 1
-    # Each bit is correct with probability 1/2
-    x_hat = [1] * n 
+    # Set default guesses
+    x_hat = [0] * n 
 
-    # Based on value of noisy running counter, set other bits we are certain about
-    # These are correct with probability 1
+    # Based on a[i], set x[i] to the most likely value
+    # For first bit:
     if a[0] == 0:
-        x_hat[0] = 0
+        x_hat[0] = 0 # with probability 1
     elif a[0] == 2:
-        x_hat[0] = 1
+        x_hat[0] = 1 # with probability 1
+
+    # For rest of bits:
     for i in range(2, n):
         a_diff = a[i]-a[i-1] 
         if a_diff == 2:
-            x_hat[i] = 1
+            x_hat[i] = 1 # with probability 1
         elif a_diff == -1:
-            x_hat[i] = 0
+            x_hat[i] = 0 # with probability 1
+        elif a_diff == 1:
+            x_hat[i] = 1 # with probability 2/3
+        else:
+            x_hat[i] = 0 # with probability 2/3
     return x_hat
 
 
@@ -31,19 +36,46 @@ def attack_b(a, w, n):
     # Set default guesses to w
     # Each bit is correct with probability 2/3
     x_hat = [w[i] for i in range(n)] 
+    z = [-1] * n
 
-    # Based on value of noisy running counter, set other bits we are certain about
-    # These are correct with probability 1
+    # Based on a[i], set x[i] to the most likely value
+    # For first bit:
     if a[0] == 0:
-        x_hat[0] = 0
+        x_hat[0] = 0 # with probability 1
+        z[0] = 0 
     elif a[0] == 2:
-        x_hat[0] = 1
+        x_hat[0] = 1 # with probability 1
+        z[0] = 1
+
+    # For rest of bits:
     for i in range(2, n):
         a_diff = a[i]-a[i-1] 
         if a_diff == 2:
-            x_hat[i] = 1
+            x_hat[i] = 1 # with probability 1
+            z[i] = 1
+
         elif a_diff == -1:
-            x_hat[i] = 0
+            x_hat[i] = 0 # with probability 1
+            z[i] = 0
+
+        elif a_diff == 1:
+            if z[i-1] == 1:
+                x_hat[i] = 1 # with probability 1
+                z[i] = 1
+            elif z[i-1] == 0:
+                x_hat[i] = w[i] # with probability 2/3
+            else:
+                x_hat[i] = 1 # with probability 2/3
+
+        elif a_diff == 0:
+            if z[i-1] == 0:
+                x_hat[i] = 0 # with probability 1
+                z[i] = 0
+            elif z[i-1] == 1:
+                x_hat[i] = w[i] # with probability 2/3
+            else:
+                x_hat[i] = 0 # with probability 2/3
+
     return x_hat
 
 
@@ -96,6 +128,9 @@ def main():
         mean_b = np.append(mean_b, np.mean(results_b))
         std_a = np.append(std_a, np.std(results_a))
         std_b = np.append(std_b, np.std(results_b))
+
+    print "Mean a: " + str(mean_a)
+    print "Mean b: " + str(mean_b)
 
     # Plot results.
     plt.plot(n_vals, mean_a, 'bo-', label='Mean fraction recovered without extra info')
