@@ -5,63 +5,64 @@ import numpy as np
 import sys
 import random
 
-# Running counter attack a (without extra information)
+# Running counter attack a (without extra information).
 def attack_a(a, n):
-    # Set default guesses
+    # Set default guesses.
     x_hat = [0] * n 
 
-    # Based on a[i], set x[i] to the most likely value
+    # Based on a[i], set x[i] to the most likely value.
     # For first bit:
     if a[0] == 0:
-        x_hat[0] = 0 # with probability 1
+        x_hat[0] = 0 # with probability 1.
     elif a[0] == 2:
-        x_hat[0] = 1 # with probability 1
+        x_hat[0] = 1 # with probability 1.
 
     # For rest of bits:
-    for i in range(2, n):
+    for i in range(1, n):
         a_diff = a[i]-a[i-1] 
         if a_diff == 2:
-            x_hat[i] = 1 # with probability 1
+            x_hat[i] = 1 # with probability 1.
         elif a_diff == -1:
-            x_hat[i] = 0 # with probability 1
+            x_hat[i] = 0 # with probability 1.
         elif a_diff == 1:
-            x_hat[i] = 1 # with probability 2/3
+            x_hat[i] = 1 # with probability 2/3.
         else:
-            x_hat[i] = 0 # with probability 2/3
+            x_hat[i] = 0 # with probability 2/3.
     return x_hat
 
 
-# Running counter attack b (with extra information, w)
+# Running counter attack b (with extra information, w).
 def attack_b(a, w, n):
-    # Set default guesses to w
-    # Each bit is correct with probability 2/3
+    # Set default guesses to w.
     x_hat = [w[i] for i in range(n)] 
+
+    # Initialize z for storing noise bits we are certain about.
     z = [-1] * n
 
-    # Based on a[i], set x[i] to the most likely value
+    # Based on a[i], set x[i] to the most likely value.
     # For first bit:
     if a[0] == 0:
         x_hat[0] = 0 # with probability 1
-        z[0] = 0 
+        z[0] = 0 # store z[0].
     elif a[0] == 2:
         x_hat[0] = 1 # with probability 1
-        z[0] = 1
+        z[0] = 1 # store z[0].
 
     # For rest of bits:
-    for i in range(2, n):
+    for i in range(1, n):
         a_diff = a[i]-a[i-1] 
         if a_diff == 2:
             x_hat[i] = 1 # with probability 1
-            z[i] = 1
+            z[i] = 1 # store z[i].
 
         elif a_diff == -1:
             x_hat[i] = 0 # with probability 1
-            z[i] = 0
+            z[i] = 0 # store z[i].
 
         elif a_diff == 1:
             if z[i-1] == 1:
                 x_hat[i] = 1 # with probability 1
-                z[i] = 1
+                z[i] = 1 # store z[i].
             elif z[i-1] == 0:
                 x_hat[i] = w[i] # with probability 2/3
             else:
@@ -70,7 +71,7 @@ def attack_b(a, w, n):
         elif a_diff == 0:
             if z[i-1] == 0:
                 x_hat[i] = 0 # with probability 1
-                z[i] = 0
+                z[i] = 0 # store z[i].
             elif z[i-1] == 1:
                 x_hat[i] = w[i] # with probability 2/3
             else:
@@ -133,13 +134,13 @@ def main():
     print "Mean b: " + str(mean_b)
 
     # Plot results.
-    plt.plot(n_vals, mean_a, 'bo-', label='Mean fraction recovered without extra info')
-    plt.plot(n_vals, mean_b, 'go-', label='Mean fraction recovered with extra info')
-    plt.plot(n_vals, std_a, 'b^:', label='Standard deviation of fraction recovered without extra info')
-    plt.plot(n_vals, std_b, 'g^:', label='Standard deviation of fraction recovered with extra info')
+    plt.plot(n_vals, mean_a, 'bo-', label='Mean without extra info')
+    plt.plot(n_vals, std_a, 'b^:', label='Standard deviation without extra info')
+    plt.plot(n_vals, mean_b, 'go-', label='Mean with extra info')
+    plt.plot(n_vals, std_b, 'g^:', label='Standard deviation with extra info')
     plt.xlabel('Length of x (n)')
     plt.ylabel('Fraction of bits of x recovered')
-    plt.title("How well can we recover x from a noisy running counter?")
+    plt.title("Recovering x from noisy running counter with and without extra information.")
     plt.legend(loc='best')
     plt.show()
 
