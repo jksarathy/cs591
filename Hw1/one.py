@@ -63,15 +63,16 @@ def compute_stats(mean_had, mean_rand, std_had, std_rand, results_had, results_r
     return (mean_had, mean_rand, std_had, std_rand)
 
 # Plot results.
-def plot_trials(ax, dep_var, dep_label, mean_had, mean_rand, std_had, std_rand):
-    ax.plot(dep_var, mean_had, 'bo-', label='Mean for Hadamard')
-    ax.plot(dep_var, std_had, 'b^:', label='Standard deviation for Hadamard')
+def plot_trials(ax, dep_var, dep_label,  mean_rand, std_rand, mean_had = [],  std_had = []):
+    if len(mean_had) > 0:
+        ax.plot(dep_var, mean_had, 'bo-', label='Mean for Hadamard')
+        ax.plot(dep_var, std_had, 'b^:', label='Standard deviation for Hadamard')
     ax.plot(dep_var, mean_rand, 'go-', label='Mean for Random')
     ax.plot(dep_var, std_rand, 'g^:', label='Standard deviation for Random')
     ax.set_xlabel(dep_label)
     ax.set_ylabel('Fraction of bits of x incorrectly recovered')
-    ax.set_title("Hadamard vs. Random Query Attack as " + dep_label + " varies.")
     ax.legend(loc='best')
+    plt.show()
 
 def print_stats(desc, mean_had, mean_rand, std_had, std_rand):
     print "Stats for dependent var " + desc
@@ -85,27 +86,25 @@ def main():
     # Set number of trials.
     trials = 20
 
-    # Initialize the plot and axes.
-    fig = plt.figure(figsize=(20, 10))
-    ax1 = fig.add_subplot(131)
-    ax2 = fig.add_subplot(132)
-    ax3 = fig.add_subplot(133)
-
     # Plot n as dependent variable.
+    fig1 = plt.figure()
+    ax1 = fig1.add_subplot(111)
+    ax1.set_title("Hadamard vs. Random Query Attack as n varies.")
     # Fix sigma and m/n.
-    sigma = 2**(-3) 
-    n_vals = [128, 512]
+    sigma = 2**(-4) 
+    n_vals = [128, 512, 2048, 8192]
     # Initialize arrays for storing statistics.
     mean_had, mean_rand, std_had, std_rand = np.array([]), np.array([]), np.array([]), np.array([])
     for n in n_vals:
         m = 4*n 
         results_had, results_rand = run_trials(trials, n, m, sigma)
         mean_had, mean_rand, std_had, std_rand = compute_stats(mean_had, mean_rand, std_had, std_rand, results_had, results_rand)
-    print_stats("n", mean_had, mean_rand, std_had, std_rand)
-    plot_trials(ax1, n_vals, "n", mean_had, mean_rand, std_had, std_rand)
+    plot_trials(ax1, n_vals, "n", mean_rand, std_rand, mean_had, std_had)
 
     # Plot m as dependent variable.
-    ax2.set_yscale("log") 
+    fig2 = plt.figure()
+    ax2 = fig2.add_subplot(111)
+    ax2.set_title("Random Query Attack as " + "m" + " varies.")
     # Fix sigma and n.
     n = 128
     sigma = 2**(-3)
@@ -115,12 +114,13 @@ def main():
     for m in m_vals:
         results_had, results_rand = run_trials(trials, n, m, sigma)
         mean_had, mean_rand, std_had, std_rand = compute_stats(mean_had, mean_rand, std_had, std_rand, results_had, results_rand)
-    print_stats("m", mean_had, mean_rand, std_had, std_rand)
-    plot_trials(ax2, m_vals, "m", mean_had, mean_rand, std_had, std_rand)
+    plot_trials(ax2, m_vals, "m for n=" + str(n), mean_rand, std_rand)
 
     # Plot sigma as dependent variable.
-    ax3.set_yscale("log")
-    ax3.set_xscale("log")
+    fig3 = plt.figure()
+    ax3 = fig3.add_subplot(111)
+    ax3.set_yscale("symlog")
+    ax3.set_title("Hadamard vs. Random Query Attack as sigma varies.")
     # Fix n and m.
     n = 128
     m = 4*n
@@ -130,12 +130,9 @@ def main():
     for sigma in sigma_vals:
         results_had, results_rand = run_trials(trials, n, m, sigma)
         mean_had, mean_rand, std_had, std_rand = compute_stats(mean_had, mean_rand, std_had, std_rand, results_had, results_rand)
-    print_stats("sigma", mean_had, mean_rand, std_had, std_rand)
+    print_stats("sigma", mean_rand, std_rand, mean_had, std_had)
     plot_trials(ax3, sigma_vals, "sigma", mean_had, mean_rand, std_had, std_rand)
 
-    # Display plot.
-    plt.tight_layout()
-    plt.show()
 
 
 
